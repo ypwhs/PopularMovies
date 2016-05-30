@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="320dp">
+    android:minHeight="260dp"
+    android:background="#33000000"
+    >
+
+    <TextView
+        android:text="@string/loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:textSize="28sp"
+        android:id="@+id/movieNameTextView" />
 
     <ImageView
-        android:id="@+id/imageView1"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:id="@+id/postImageView"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
         android:adjustViewBounds="true"
-        android:scaleType="centerCrop"
         android:clickable="true"
-        android:foreground="?android:attr/selectableItemBackground"
         android:contentDescription="@string/imageView"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:scaleType="centerCrop"
         tools:targetApi="honeycomb" />
 
-</LinearLayout>
+</RelativeLayout>

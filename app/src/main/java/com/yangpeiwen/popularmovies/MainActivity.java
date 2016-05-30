@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -31,7 +32,7 @@ import static com.yangpeiwen.popularmovies.R.id.recyclerView;
 
 public class MainActivity extends AppCompatActivity {
     private MyAdapter mAdapter;
-    private ExecutorService pool = Executors.newFixedThreadPool(1);
+    private ExecutorService pool = Executors.newFixedThreadPool(2);
     private OkHttpClient client = new OkHttpClient();
 
     @Override
@@ -53,6 +54,8 @@ public class MainActivity extends AppCompatActivity {
                 getPopularMovies(1);
             }
         });
+
+
     }
 
     private String httpGET(String url) {
@@ -70,8 +73,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     Lock popularMoviesLock = new ReentrantLock();
-
+    private int lastPage = 0;
     private void getPopularMovies(int page) {
+        if(lastPage == page) return;
+        lastPage = page;
         if (mAdapter.resultsBeen.length > 0 && mAdapter.resultsBeen[(page - 1) * 20] != null) {
             Log.d("已获取", "page:" + page);
             return;
@@ -125,10 +130,12 @@ public class MainActivity extends AppCompatActivity {
 
         class CustomViewHolder extends RecyclerView.ViewHolder {
             ImageView imageView;
+            TextView textView;
 
             CustomViewHolder(View itemView) {
                 super(itemView);
-                imageView = (ImageView) itemView.findViewById(R.id.imageView1);
+                imageView = (ImageView) itemView.findViewById(R.id.postImageView);
+                textView = (TextView) itemView.findViewById(R.id.movieNameTextView);
             }
         }
 
@@ -143,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
         public void onBindViewHolder(CustomViewHolder holder, final int position) {
             PopularJSON.ResultsBean currentResult = resultsBeen[position];
             if (currentResult != null) {
+                holder.textView.setText(currentResult.getTitle());
                 String postPrefix = "https://image.tmdb.org/t/p/w370";
                 Picasso.with(context)
                         .load(postPrefix + currentResult.getPoster_path())
