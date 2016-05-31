@@ -6,7 +6,6 @@
     tools:context="com.yangpeiwen.popularmovies.MainActivity"
     android:id="@+id/recyclerView"
     android:smoothScrollbar="true"
-    android:animationCache="false"
     >
 
 </android.support.v7.widget.RecyclerView>

@@ -1,5 +1,6 @@
 package com.yangpeiwen.popularmovies;
 
+import java.io.Serializable;
 import java.util.List;
 
 public class PopularJSON {
@@ -58,7 +59,7 @@ public class PopularJSON {
         this.results = results;
     }
 
-    public static class ResultsBean{
+    public static class ResultsBean implements Serializable {
         private String poster_path;
         private boolean adult;
         private String overview;

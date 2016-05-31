@@ -2,7 +2,9 @@ package com.yangpeiwen.popularmovies;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
@@ -15,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
@@ -24,29 +25,39 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-
-import static com.yangpeiwen.popularmovies.R.id.recyclerView;
+import static android.support.v7.widget.RecyclerView.SCROLL_STATE_DRAGGING;
+import static android.support.v7.widget.RecyclerView.SCROLL_STATE_IDLE;
 
 public class MainActivity extends AppCompatActivity {
     private MyAdapter mAdapter;
     private ExecutorService pool = Executors.newFixedThreadPool(2);
-    private OkHttpClient client = new OkHttpClient();
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        RecyclerView mRecyclerView = (RecyclerView) findViewById(recyclerView);
-        assert mRecyclerView != null;
+        RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        if(mRecyclerView == null)return;
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mRecyclerView.setItemViewCacheSize(100);
         RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(this, 2);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mAdapter = new MyAdapter(this);
+        mRecyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                Context context = mAdapter.context;
+                final Picasso picasso = Picasso.with(context);
+                if (newState == SCROLL_STATE_IDLE || newState == SCROLL_STATE_DRAGGING) {
+                    picasso.resumeTag(1);
+                    Log.d("resume", "resume");
+                } else {
+                    picasso.pauseTag(1);
+                    Log.d("pause", "pause");
+                }
+            }
+        });
         mRecyclerView.setAdapter(mAdapter);
         pool.execute(new Runnable() {
             @Override
@@ -82,21 +93,9 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private String httpGET(String url) {
-        String responseString = "";
-        try {
-            Request request = new Request.Builder()
-                    .url(url)
-                    .build();
-            Response response = client.newCall(request).execute();
-            responseString = response.body().string();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return responseString;
-    }
-
-    private void getPopularMovies(int page) {
+    private final Activity activity = this;
+    private Common common = new Common();
+    private void getPopularMovies(final int page) {
         if (mAdapter.resultsBeen.length > 0 && mAdapter.resultsBeen[(page - 1) * 20] != null) {
             Log.d("已获取", "page:" + page);
             return;
@@ -107,9 +106,10 @@ public class MainActivity extends AppCompatActivity {
                 key +
                 "&page=" +
                 page;
-        String response;
-        response = httpGET(url);
         Log.v("url", url);
+        String response;
+        response = common.httpGET(url);
+
 
         Gson gson = new Gson();
         PopularJSON popular = gson.fromJson(response, PopularJSON.class);
@@ -121,24 +121,39 @@ public class MainActivity extends AppCompatActivity {
             }
             List<PopularJSON.ResultsBean> results = popular.getResults();
             System.arraycopy(results.toArray(), 0, mAdapter.resultsBeen, (page - 1) * 20, results.size());
-            runOnUiThread(refreshListView);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mAdapter.notifyDataSetChanged();
+                    RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+                    if (mRecyclerView != null) {
+                        mRecyclerView.setVisibility(View.VISIBLE);
+                    }
+                }
+            });
         } else {
-            final Activity activity = this;
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(activity, "获取失败", Toast.LENGTH_SHORT).show();
+                    View recyclerView = findViewById(R.id.recyclerView);
+                    if (recyclerView == null) return;
+                    Snackbar snackbar = Snackbar.make(recyclerView, "获取失败", Snackbar.LENGTH_LONG);
+                    snackbar.setAction("重试", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            pool.execute(new Runnable() {
+                                @Override
+                                public void run() {
+                                    getPopularMovies(page);
+                                }
+                            });
+                        }
+                    });
+                    snackbar.show();
                 }
             });
         }
     }
-
-    private Runnable refreshListView = new Runnable() {
-        @Override
-        public void run() {
-            mAdapter.notifyDataSetChanged();
-        }
-    };
 
     class MyAdapter extends RecyclerView.Adapter<MyAdapter.CustomViewHolder> {
         PopularJSON.ResultsBean resultsBeen[] = new PopularJSON.ResultsBean[0];
@@ -149,36 +164,49 @@ public class MainActivity extends AppCompatActivity {
         }
 
         class CustomViewHolder extends RecyclerView.ViewHolder {
-            ImageView imageView;
-            TextView textView;
-
+            ImageView postImageView;
+            TextView movieNameTextView;
+            View view;
             CustomViewHolder(View itemView) {
                 super(itemView);
-                imageView = (ImageView) itemView.findViewById(R.id.postImageView);
-                textView = (TextView) itemView.findViewById(R.id.movieNameTextView);
+                postImageView = (ImageView) itemView.findViewById(R.id.postImageView);
+                movieNameTextView = (TextView) itemView.findViewById(R.id.movieNameTextView);
+                view = itemView;
             }
         }
 
-        public void clear(){
+        void clear() {
             resultsBeen = new PopularJSON.ResultsBean[0];
         }
 
         @Override
         public CustomViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
             View view = LayoutInflater.from(viewGroup.getContext())
-                    .inflate(R.layout.post_image, viewGroup, false);
+                    .inflate(R.layout.image_post, viewGroup, false);
             return new CustomViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(CustomViewHolder holder, final int position) {
-            PopularJSON.ResultsBean currentResult = resultsBeen[position];
-            if (currentResult != null) {
-                holder.textView.setText(currentResult.getTitle());
-                String postPrefix = "https://image.tmdb.org/t/p/w370";
+        public void onBindViewHolder(CustomViewHolder holder, int position) {
+            final PopularJSON.ResultsBean bean = resultsBeen[position];
+            if (bean != null) {
+                holder.movieNameTextView.setText(bean.getTitle());
+                String postPrefix = "https://image.tmdb.org/t/p/w780";
                 Picasso.with(context)
-                        .load(postPrefix + currentResult.getPoster_path())
-                        .into(holder.imageView);
+                        .load(postPrefix + bean.getPoster_path())
+                        .tag(1)
+                        .into(holder.postImageView);
+
+                View.OnClickListener clickListener = new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(activity, DetailActivity.class);
+                        intent.putExtra("data", bean);
+                        startActivity(intent);
+                    }
+                };
+                holder.view.setOnClickListener(clickListener);
+                holder.postImageView.setOnClickListener(clickListener);
             } else {
                 final int page = position / 20 + 1;
                 pool.execute(new Runnable() {
