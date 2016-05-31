@@ -9,6 +9,8 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -21,8 +23,6 @@ import com.squareup.picasso.Picasso;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -54,8 +54,32 @@ public class MainActivity extends AppCompatActivity {
                 getPopularMovies(1);
             }
         });
+    }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                Log.d("home", "home");
+                return true;
+            case R.id.menu_refresh:
+                mAdapter.clear();
+                mAdapter.notifyDataSetChanged();
+                pool.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        getPopularMovies(1);
+                    }
+                });
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private String httpGET(String url) {
@@ -72,11 +96,7 @@ public class MainActivity extends AppCompatActivity {
         return responseString;
     }
 
-    Lock popularMoviesLock = new ReentrantLock();
-    private int lastPage = 0;
     private void getPopularMovies(int page) {
-        if(lastPage == page) return;
-        lastPage = page;
         if (mAdapter.resultsBeen.length > 0 && mAdapter.resultsBeen[(page - 1) * 20] != null) {
             Log.d("已获取", "page:" + page);
             return;
@@ -137,6 +157,10 @@ public class MainActivity extends AppCompatActivity {
                 imageView = (ImageView) itemView.findViewById(R.id.postImageView);
                 textView = (TextView) itemView.findViewById(R.id.movieNameTextView);
             }
+        }
+
+        public void clear(){
+            resultsBeen = new PopularJSON.ResultsBean[0];
         }
 
         @Override
