@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="@string/order_setting"
+        android:key="pref_key_storage_settings">
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/popular_or_rate_titles"
+            android:entryValues="@array/popular_or_rate_values"
+            android:key="order"
+            android:dialogTitle="@string/order_setting"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@string/positive"
+            android:title="@string/order_setting"
+            android:summary="%s"/>
+    </PreferenceCategory>
+</PreferenceScreen>

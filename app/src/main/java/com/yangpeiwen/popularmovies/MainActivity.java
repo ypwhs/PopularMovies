@@ -3,12 +3,14 @@ package com.yangpeiwen.popularmovies;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -25,52 +27,76 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static android.support.v7.widget.RecyclerView.SCROLL_STATE_DRAGGING;
-import static android.support.v7.widget.RecyclerView.SCROLL_STATE_IDLE;
-
 public class MainActivity extends AppCompatActivity {
     private MyAdapter mAdapter;
     private ExecutorService pool = Executors.newFixedThreadPool(2);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        if(mRecyclerView == null)return;
+        if (mRecyclerView == null) return;
+        ((SimpleItemAnimator) mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
         mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setItemAnimator(new DefaultItemAnimator());
-        mRecyclerView.setItemViewCacheSize(100);
+        mRecyclerView.setItemViewCacheSize(20);
+        mRecyclerView.setDrawingCacheEnabled(true);
+        mRecyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+
         RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(this, 2);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mAdapter = new MyAdapter(this);
-        mRecyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-                Context context = mAdapter.context;
-                final Picasso picasso = Picasso.with(context);
-                if (newState == SCROLL_STATE_IDLE || newState == SCROLL_STATE_DRAGGING) {
-                    picasso.resumeTag(1);
-                    Log.d("resume", "resume");
-                } else {
-                    picasso.pauseTag(1);
-                    Log.d("pause", "pause");
-                }
-            }
-        });
         mRecyclerView.setAdapter(mAdapter);
-        pool.execute(new Runnable() {
-            @Override
-            public void run() {
-                getPopularMovies(1);
-            }
-        });
+//        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+//            @Override
+//            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+//                super.onScrollStateChanged(recyclerView, newState);
+//                Context context = mAdapter.context;
+//                Picasso picasso = Picasso.with(context);
+//                if (newState == SCROLL_STATE_SETTLING || newState == SCROLL_STATE_DRAGGING) {
+//                    picasso.pauseTag("main");
+//                } else if (newState == SCROLL_STATE_IDLE) {
+//                    picasso.resumeTag("main");
+//                }
+//            }
+//        });
+//        pool.execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                getMovies(1);
+//            }
+//        });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
         return true;
+    }
+
+    private String order = "";
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String o = sharedPreferences.getString("order", "1");
+        String order2 = o.equals("1") ? "popular" : "top_rated";
+        if(!order.equals(order2)){
+            order = order2;
+            refreshList();
+        }
+        Log.d("order", order);
+    }
+
+    private void refreshList(){
+        mAdapter.clear();
+        mAdapter.notifyDataSetChanged();
+        pool.execute(new Runnable() {
+            @Override
+            public void run() {
+                getMovies(1);
+            }
+        });
     }
 
     @Override
@@ -80,29 +106,26 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("home", "home");
                 return true;
             case R.id.menu_refresh:
-                mAdapter.clear();
-                mAdapter.notifyDataSetChanged();
-                pool.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        getPopularMovies(1);
-                    }
-                });
+                refreshList();
                 break;
+            case R.id.action_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
     }
 
     private final Activity activity = this;
     private Common common = new Common();
-    private void getPopularMovies(final int page) {
+
+    private void getMovies(final int page) {
         if (mAdapter.resultsBeen.length > 0 && mAdapter.resultsBeen[(page - 1) * 20] != null) {
             Log.d("已获取", "page:" + page);
             return;
         }
-        Log.d("getPopularMovies", "获取电影数据:" + page);
+        Log.d("getMovies", "获取电影数据:" + page);
         String key = getString(R.string.key);
-        String url = "http://api.themoviedb.org/3/movie/popular?language=zh&api_key=" +
+        String url = "http://api.themoviedb.org/3/movie/" + order + "?language=zh&api_key=" +
                 key +
                 "&page=" +
                 page;
@@ -144,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
                             pool.execute(new Runnable() {
                                 @Override
                                 public void run() {
-                                    getPopularMovies(page);
+                                    getMovies(page);
                                 }
                             });
                         }
@@ -158,15 +181,19 @@ public class MainActivity extends AppCompatActivity {
     class MyAdapter extends RecyclerView.Adapter<MyAdapter.CustomViewHolder> {
         PopularJSON.ResultsBean resultsBeen[] = new PopularJSON.ResultsBean[0];
         Context context;
+        Picasso mPicasso;
 
         MyAdapter(Context c) {
             context = c;
+            mPicasso = Picasso.with(context);
+//            mPicasso.setIndicatorsEnabled(true);
         }
 
         class CustomViewHolder extends RecyclerView.ViewHolder {
             ImageView postImageView;
             TextView movieNameTextView;
             View view;
+
             CustomViewHolder(View itemView) {
                 super(itemView);
                 postImageView = (ImageView) itemView.findViewById(R.id.postImageView);
@@ -191,11 +218,10 @@ public class MainActivity extends AppCompatActivity {
             final PopularJSON.ResultsBean bean = resultsBeen[position];
             if (bean != null) {
                 holder.movieNameTextView.setText(bean.getTitle());
-                String postPrefix = "https://image.tmdb.org/t/p/w780";
-                Picasso.with(context)
-                        .load(postPrefix + bean.getPoster_path())
-                        .tag(1)
-                        .into(holder.postImageView);
+                final String postPrefix = "https://image.tmdb.org/t/p/w342";
+                ImageView imageView = holder.postImageView;
+                mPicasso.load(postPrefix + bean.getPoster_path())
+                        .into(imageView);
 
                 View.OnClickListener clickListener = new View.OnClickListener() {
                     @Override
@@ -212,7 +238,7 @@ public class MainActivity extends AppCompatActivity {
                 pool.execute(new Runnable() {
                     @Override
                     public void run() {
-                        getPopularMovies(page);
+                        getMovies(page);
                     }
                 });
             }

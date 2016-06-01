@@ -12,7 +12,7 @@
         <TextView
             android:id="@+id/movieNameTextView2"
             style="@style/bigText"
-            android:text="@string/movieName" />
+            android:text="@string/movie_name" />
 
         <TextView
             android:id="@+id/releaseTextView"

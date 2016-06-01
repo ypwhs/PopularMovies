@@ -130,7 +130,7 @@ public class DetailActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(CustomViewHolder holder, final int position) {
-            String postPrefix = "https://image.tmdb.org/t/p/w370";
+            String postPrefix = "https://image.tmdb.org/t/p/w300";
             Picasso.with(context)
                     .load(postPrefix + bean.get(position).getFile_path())
                     .into(holder.backdropsImageView);
