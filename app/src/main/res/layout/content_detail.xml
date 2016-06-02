@@ -14,11 +14,13 @@
         android:orientation="vertical"
         android:paddingTop="24dp">
 
-        <include layout="@layout/content_movie_name" />
+        <include layout="@layout/card_movie_name" />
 
-        <include layout="@layout/content_overview" />
+        <include layout="@layout/card_overview" />
 
-        <include layout="@layout/content_backdrops" />
+        <include layout="@layout/card_credits" />
+
+        <include layout="@layout/card_backdrops" />
 
     </LinearLayout>
 

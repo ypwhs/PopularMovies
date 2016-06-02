@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
+import com.yangpeiwen.popularmovies.json.PopularMovies;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -68,6 +69,13 @@ public class MainActivity extends AppCompatActivity {
 //        });
     }
 
+    private void dismiss(int id) {
+        View view = findViewById(id);
+        if (view != null) {
+            view.setVisibility(View.GONE);
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
@@ -75,20 +83,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String order = "";
+
     @Override
     protected void onResume() {
         super.onResume();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String o = sharedPreferences.getString("order", "1");
         String order2 = o.equals("1") ? "popular" : "top_rated";
-        if(!order.equals(order2)){
+        if (!order.equals(order2)) {
             order = order2;
             refreshList();
         }
         Log.d("order", order);
     }
 
-    private void refreshList(){
+    private void refreshList() {
         mAdapter.clear();
         mAdapter.notifyDataSetChanged();
         pool.execute(new Runnable() {
@@ -135,29 +144,27 @@ public class MainActivity extends AppCompatActivity {
 
 
         Gson gson = new Gson();
-        PopularJSON popular = gson.fromJson(response, PopularJSON.class);
+        PopularMovies popular = gson.fromJson(response, PopularMovies.class);
         if (popular != null) {
             if (mAdapter.resultsBeen.length == 0) {
                 int num = popular.getTotal_results();
                 Log.d("电影总数", "" + num);
-                mAdapter.resultsBeen = new PopularJSON.ResultsBean[num];
+                mAdapter.resultsBeen = new PopularMovies.ResultsBean[num];
             }
-            List<PopularJSON.ResultsBean> results = popular.getResults();
+            List<PopularMovies.ResultsBean> results = popular.getResults();
             System.arraycopy(results.toArray(), 0, mAdapter.resultsBeen, (page - 1) * 20, results.size());
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    dismiss(R.id.mainProgressBar);
                     mAdapter.notifyDataSetChanged();
-                    RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-                    if (mRecyclerView != null) {
-                        mRecyclerView.setVisibility(View.VISIBLE);
-                    }
                 }
             });
         } else {
-            activity.runOnUiThread(new Runnable() {
+            runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    dismiss(R.id.mainProgressBar);
                     View recyclerView = findViewById(R.id.recyclerView);
                     if (recyclerView == null) return;
                     Snackbar snackbar = Snackbar.make(recyclerView, "获取失败", Snackbar.LENGTH_LONG);
@@ -178,8 +185,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     class MyAdapter extends RecyclerView.Adapter<MyAdapter.CustomViewHolder> {
-        PopularJSON.ResultsBean resultsBeen[] = new PopularJSON.ResultsBean[0];
+        PopularMovies.ResultsBean resultsBeen[] = new PopularMovies.ResultsBean[0];
         Context context;
         Picasso mPicasso;
 
@@ -198,12 +206,14 @@ public class MainActivity extends AppCompatActivity {
                 super(itemView);
                 postImageView = (ImageView) itemView.findViewById(R.id.postImageView);
                 movieNameTextView = (TextView) itemView.findViewById(R.id.movieNameTextView);
+                postImageView.setImageDrawable(null);
+                movieNameTextView.setText(getString(R.string.loading));
                 view = itemView;
             }
         }
 
         void clear() {
-            resultsBeen = new PopularJSON.ResultsBean[0];
+            resultsBeen = new PopularMovies.ResultsBean[0];
         }
 
         @Override
@@ -215,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(CustomViewHolder holder, int position) {
-            final PopularJSON.ResultsBean bean = resultsBeen[position];
+            final PopularMovies.ResultsBean bean = resultsBeen[position];
             if (bean != null) {
                 holder.movieNameTextView.setText(bean.getTitle());
                 final String postPrefix = "https://image.tmdb.org/t/p/w342";

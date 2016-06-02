@@ -6,20 +6,23 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="200dp"
+        android:layout_height="match_parent"
         android:orientation="vertical">
 
         <TextView
             style="@style/bigText"
-            android:text="@string/backdrops" />
+            android:text="@string/credits" />
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/imageRecyclerView"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+        <ProgressBar
+            android:id="@+id/creditProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_margin="@dimen/activity_vertical_margin" />
 
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/creditRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
 </android.support.v7.widget.CardView>

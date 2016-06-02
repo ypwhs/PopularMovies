@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">PopMovies</string>
-    <string name="imageView" />
     <string name="loading">载入中</string>
     <string name="refresh">刷新</string>
     <string name="rate">8.4</string>
@@ -13,6 +12,9 @@
     <string name="title_activity_settings">设置</string>
     <string name="order_setting">排序设置</string>
     <string name="positive">确定</string>
+    <string name="credits_description">演职人员图片</string>
+    <string name="post_description">海报</string>
+    <string name="credits">演职人员</string>
 
     <string-array name="popular_or_rate_titles">
         <item>热度</item>

@@ -1,4 +1,4 @@
-package com.yangpeiwen.popularmovies;
+package com.yangpeiwen.popularmovies.json;
 
 import java.io.Serializable;
 import java.util.List;
@@ -7,7 +7,7 @@ import java.util.List;
  * Created by ypw on 16/5/31.
  */
 
-public class MovieImagesJSON {
+public class MovieImages {
 
     /**
      * id : 550

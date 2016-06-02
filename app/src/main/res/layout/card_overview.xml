@@ -16,6 +16,9 @@
         <TextView
             android:id="@+id/overviewTextView"
             style="@style/plainText"
+            android:layout_marginBottom="@dimen/margin_2x"
             android:text="@string/overview" />
+
     </LinearLayout>
+
 </android.support.v7.widget.CardView>

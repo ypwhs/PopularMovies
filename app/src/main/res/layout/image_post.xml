@@ -22,7 +22,7 @@
         android:layout_height="fill_parent"
         android:adjustViewBounds="true"
         android:clickable="true"
-        android:contentDescription="@string/imageView"
+        android:contentDescription="@string/post_description"
         android:foreground="?android:attr/selectableItemBackground"
         android:scaleType="centerCrop"
         tools:targetApi="honeycomb" />

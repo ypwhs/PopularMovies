@@ -1,9 +1,9 @@
-package com.yangpeiwen.popularmovies;
+package com.yangpeiwen.popularmovies.json;
 
 import java.io.Serializable;
 import java.util.List;
 
-public class PopularJSON {
+public class PopularMovies {
 
     private int page;
     private int total_results;
