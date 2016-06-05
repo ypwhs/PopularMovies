@@ -337,7 +337,7 @@ public class DetailActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(final CustomViewHolder holder, final int position) {
-            String postPrefix = "https://image.tmdb.org/t/p/w185";
+            String postPrefix = "https://image.tmdb.org/t/p/w342";
             Picasso.with(context)
                     .load(postPrefix + bean.get(position).getFile_path())
                     .into(holder.imageView, new Callback() {
@@ -404,7 +404,7 @@ public class DetailActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(final CustomViewHolder holder, int position) {
             holder.textView.setText(text.get(position));
-            final String imageUrl = "https://image.tmdb.org/t/p/w342" + image.get(position);
+            final String imageUrl = "https://image.tmdb.org/t/p/w300" + image.get(position);
             ImageView imageView = holder.imageView;
             Picasso.with(context)
                     .load(imageUrl)
