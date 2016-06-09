@@ -30,7 +30,7 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     private MyAdapter mAdapter;
-    private ExecutorService pool = Executors.newFixedThreadPool(2);
+    private ExecutorService pool = Executors.newFixedThreadPool(1);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,7 +103,8 @@ public class MainActivity extends AppCompatActivity {
         pool.execute(new Runnable() {
             @Override
             public void run() {
-                getMovies(1);
+                for(int i = 1; i <= 5; i++)
+                getMovies(i);
             }
         });
     }
@@ -142,7 +143,6 @@ public class MainActivity extends AppCompatActivity {
         String response;
         response = common.httpGET(url);
 
-
         Gson gson = new Gson();
         PopularMovies popular = gson.fromJson(response, PopularMovies.class);
         if (popular != null) {
@@ -153,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
             }
             List<PopularMovies.ResultsBean> results = popular.getResults();
             System.arraycopy(results.toArray(), 0, mAdapter.resultsBeen, (page - 1) * 20, results.size());
+            mAdapter.currentPage = page;
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -190,6 +191,7 @@ public class MainActivity extends AppCompatActivity {
         PopularMovies.ResultsBean resultsBeen[] = new PopularMovies.ResultsBean[0];
         Context context;
         Picasso mPicasso;
+        int currentPage = 0;
 
         MyAdapter(Context c) {
             context = c;
@@ -243,14 +245,18 @@ public class MainActivity extends AppCompatActivity {
                 };
                 holder.view.setOnClickListener(clickListener);
                 holder.postImageView.setOnClickListener(clickListener);
-            } else {
-                final int page = position / 20 + 1;
-                pool.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        getMovies(page);
-                    }
-                });
+            }
+
+            if(position/20 + 5 > currentPage) {
+                for (int i = 1; i <= 5; i++) {
+                    final int page = currentPage + i;
+                    pool.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            getMovies(page);
+                        }
+                    });
+                }
             }
         }
 
