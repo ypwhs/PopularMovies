@@ -25,6 +25,7 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.yangpeiwen.popularmovies.json.MovieCredits;
 import com.yangpeiwen.popularmovies.json.MovieImages;
+import com.yangpeiwen.popularmovies.json.MovieVideos;
 import com.yangpeiwen.popularmovies.json.PopularMovies;
 
 import java.util.ArrayList;
@@ -123,13 +124,27 @@ public class DetailActivity extends AppCompatActivity {
                 getMovieCredits(movieID);
             }
         });
-        run(new Runnable() {
-            @Override
-            public void run() {
-                getMovieVideos(movieID);
-            }
-        });
+//        run(new Runnable() {
+//            @Override
+//            public void run() {
+//                getMovieVideos(movieID);
+//            }
+//        });
 
+//        AppBarLayout appBarLayout = (AppBarLayout)findViewById(R.id.app_bar);
+//        if (appBarLayout == null) return;
+//        Configuration cf = this.getResources().getConfiguration();
+//        int height = dp(240);
+//        if(cf.orientation == Configuration.ORIENTATION_LANDSCAPE){
+//            height = dp(120);
+//        }
+//        appBarLayout.getLayoutParams().height = height;
+    }
+
+    int dp(int dp) {
+        final float scale = getResources().getDisplayMetrics().density;
+        int pixels = (int) (dp * scale + 0.5f);
+        return pixels;
     }
 
     private void run(Runnable runnable) {
@@ -264,45 +279,33 @@ public class DetailActivity extends AppCompatActivity {
         response = common.httpGET(url);
         Log.d("http", response);
 
-//        Gson gson = new Gson();
-//        final MovieImages json = gson.fromJson(response, MovieImages.class);
-//        if (json != null) {
-//            backdropsAdapter.bean = json.getBackdrops();
-//            runOnUiThread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    //设置工具栏背景图为海报图
-//                    ImageView toolbarImageView = (ImageView) findViewById(R.id.toolbarImageView);
-//                    List<MovieImages.BackdropsBean> data = json.getBackdrops();
-//                    String path = "https://image.tmdb.org/t/p/w370" + data.get(new Random().nextInt(data.size())).getFile_path();
-//                    Picasso.with(backdropsAdapter.context)
-//                            .load(path)
-//                            .into(toolbarImageView);
-//                    backdropsAdapter.notifyDataSetChanged();
-//                    dismiss(R.id.backdropsProgressBar);
-//                }
-//            });
-//        } else {
-//            runOnUiThread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    View recyclerView = findViewById(R.id.backdropsRecyclerView);
-//                    if (recyclerView == null) return;
-//                    Snackbar snackbar = Snackbar.make(recyclerView, "获取剧照失败", Snackbar.LENGTH_SHORT);
-//                    snackbar.show();
-//                    dismiss(R.id.backdropsProgressBar);
-//                }
-//            });
-//        }
+        Gson gson = new Gson();
+        final MovieVideos json = gson.fromJson(response, MovieVideos.class);
+        if (json != null) {
 
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ((TextView) findViewById(R.id.youtubeTextView)).setMovementMethod(LinkMovementMethod.getInstance());
-                ((TextView) findViewById(R.id.youtubeTextView)).setText(Html.fromHtml("<a href=http://www.youtube.com/watch?v=PfBVIHgQbYk>Official Trailer</a>"));
-
-            }
-        });
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    List<MovieVideos.ResultsBean> results = json.getResults();
+                    String youtubehtml = "";
+                    for (int i = 0; i < results.size(); i++) {
+                        youtubehtml += "<a href=http://www.youtube.com/watch?v=" + results.get(i).getKey() + ">" + results.get(i).getName() + "</a><br>";
+                    }
+                    ((TextView) findViewById(R.id.youtubeTextView)).setMovementMethod(LinkMovementMethod.getInstance());
+                    ((TextView) findViewById(R.id.youtubeTextView)).setText(Html.fromHtml(youtubehtml));
+                }
+            });
+        } else {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    View recyclerView = findViewById(R.id.backdropsRecyclerView);
+                    if (recyclerView == null) return;
+                    Snackbar snackbar = Snackbar.make(recyclerView, "获取视频失败", Snackbar.LENGTH_SHORT);
+                    snackbar.show();
+                }
+            });
+        }
     }
 
     class BackdropsAdapter extends RecyclerView.Adapter<BackdropsAdapter.CustomViewHolder> {
@@ -311,10 +314,6 @@ public class DetailActivity extends AppCompatActivity {
 
         BackdropsAdapter(Context c) {
             context = c;
-        }
-
-        void clear() {
-            bean.clear();
         }
 
         class CustomViewHolder extends RecyclerView.ViewHolder {
@@ -374,11 +373,6 @@ public class DetailActivity extends AppCompatActivity {
 
         CreditAdapter(Context c) {
             context = c;
-        }
-
-        void clear() {
-            text.clear();
-            image.clear();
         }
 
         @Override

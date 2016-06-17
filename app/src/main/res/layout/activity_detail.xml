@@ -42,6 +42,22 @@
         </android.support.design.widget.CollapsingToolbarLayout>
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_detail" />
+    <include
+        android:id="@+id/include"
+        layout="@layout/content_detail" />
+    <!--
+        <android.support.design.widget.FloatingActionButton
+            android:src="@drawable/abc_btn_rating_star_off_mtrl_alpha"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:id="@+id/floatingActionButton"
+            app:layout_anchor="@+id/include"
+            app:layout_anchorGravity="right|end|bottom"
+            android:layout_marginRight="@dimen/float_margin"
+            android:layout_marginBottom="@dimen/float_margin"
+            android:layout_marginEnd="@dimen/float_margin"
+            />
+    -->
 
 </android.support.design.widget.CoordinatorLayout>

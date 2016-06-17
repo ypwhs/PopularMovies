@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
@@ -44,29 +45,9 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setDrawingCacheEnabled(true);
         mRecyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
 
-        RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(this, 2);
-        mRecyclerView.setLayoutManager(mLayoutManager);
+
         mAdapter = new MyAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
-//        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-//            @Override
-//            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-//                super.onScrollStateChanged(recyclerView, newState);
-//                Context context = mAdapter.context;
-//                Picasso picasso = Picasso.with(context);
-//                if (newState == SCROLL_STATE_SETTLING || newState == SCROLL_STATE_DRAGGING) {
-//                    picasso.pauseTag("main");
-//                } else if (newState == SCROLL_STATE_IDLE) {
-//                    picasso.resumeTag("main");
-//                }
-//            }
-//        });
-//        pool.execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                getMovies(1);
-//            }
-//        });
     }
 
     private void dismiss(int id) {
@@ -95,6 +76,16 @@ public class MainActivity extends AppCompatActivity {
             refreshList();
         }
         Log.d("order", order);
+
+        RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        if (mRecyclerView == null) return;
+        Configuration cf = this.getResources().getConfiguration();
+        int gridnum = 2;
+        if(cf.orientation == Configuration.ORIENTATION_LANDSCAPE){
+            gridnum = 3;
+        }
+        RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(this, gridnum);
+        mRecyclerView.setLayoutManager(mLayoutManager);
     }
 
     private void refreshList() {
@@ -196,7 +187,6 @@ public class MainActivity extends AppCompatActivity {
         MyAdapter(Context c) {
             context = c;
             mPicasso = Picasso.with(context);
-//            mPicasso.setIndicatorsEnabled(true);
         }
 
         class CustomViewHolder extends RecyclerView.ViewHolder {

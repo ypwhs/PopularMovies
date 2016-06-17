@@ -39,7 +39,8 @@
             android:id="@+id/youtubeTextView"
             style="@style/bigText"
             android:linksClickable="true"
-            android:text="" />
+            android:text=""
+            android:visibility="gone" />
 
     </LinearLayout>
 

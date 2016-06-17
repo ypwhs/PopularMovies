@@ -15,6 +15,7 @@
     <string name="credits_description">演职人员图片</string>
     <string name="post_description">海报</string>
     <string name="credits">演职人员</string>
+    <string name="credit_name">credit_name</string>
 
     <string-array name="popular_or_rate_titles">
         <item>热度</item>
